@@ -1,0 +1,791 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FaithScore — Music notation for both worlds</title>
+<meta name="description" content="FaithScore is a composition tool that writes in standard staff notation and tonic sol-fa side by side, built for choir directors who work in both." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1D2433;
+    --ink-2: #262E42;
+    --ivory: #FAF6EC;
+    --ivory-2: #F1EADA;
+    --line: #D8CFB8;
+    --line-dark: #3A4258;
+    --brass: #B08D57;
+    --brass-light: #D8B978;
+    --oxblood: #6B2A2A;
+    --ink-soft: #5B6478;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: 'Work Sans', sans-serif;
+    background: var(--ivory);
+    color: var(--ink);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, .display {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+    margin: 0;
+  }
+  p { margin: 0; }
+  a { color: inherit; text-decoration: none; }
+  img, svg { display: block; max-width: 100%; }
+  .wrap {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 32px;
+  }
+  @media (max-width: 640px) {
+    .wrap { padding: 0 20px; }
+  }
+
+  /* ---------- Buttons ---------- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 600;
+    font-size: 15px;
+    padding: 13px 26px;
+    border-radius: 3px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    appearance: none;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+  .btn-brass {
+    background: var(--brass);
+    color: var(--ink);
+  }
+  .btn-brass:hover { background: var(--brass-light); }
+  .btn-outline-light {
+    background: transparent;
+    border-color: rgba(250,246,236,0.35);
+    color: var(--ivory);
+  }
+  .btn-outline-light:hover { border-color: var(--brass-light); color: var(--brass-light); }
+  .btn-outline-dark {
+    background: transparent;
+    border-color: var(--line);
+    color: var(--ink);
+  }
+  .btn-outline-dark:hover { border-color: var(--brass); color: var(--oxblood); }
+
+  /* ---------- Nav ---------- */
+  header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  background: transparent;
+  backdrop-filter: none;
+  border-bottom: 1px solid transparent;
+  transition: background 0.25s ease, backdrop-filter 0.25s ease, border-color 0.25s ease;
+  }
+  header.is-scrolled {
+  background: rgba(29,36,51,0.92);
+  backdrop-filter: blur(6px);
+  border-bottom-color: var(--line-dark);
+  }
+  nav {
+  display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 0;
+  }
+  .wordmark {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 22px;
+    color: var(--ivory);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .brand-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--brass);
+    color: var(--ink);
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: -0.03em;
+    flex-shrink: 0;
+  }
+  .footer-wordmark .brand-mark { background: var(--ivory); }
+  .wordmark em {
+    font-style: normal;
+    color: var(--brass-light);
+  }
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 34px;
+  }
+  .nav-links a:not(.btn) {
+    color: rgba(250,246,236,0.75);
+    font-size: 15px;
+    font-weight: 500;
+  }
+  .nav-links a:not(.btn):hover { color: var(--ivory); }
+  .nav-toggle { display: none; background: none; border: none; color: var(--ivory); cursor: pointer; padding: 4px; }
+  @media (max-width: 780px) {
+    .nav-links { display: none; }
+    .nav-toggle { display: block; }
+    .nav-links.open {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 18px;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: var(--ink);
+      padding: 24px 20px 28px;
+      border-bottom: 1px solid var(--line-dark);
+    }
+  }
+
+  /* ---------- Hero ---------- */
+  .hero {
+    background: linear-gradient(180deg, rgba(29,36,51,0.42) 0%, rgba(38,46,66,0.78) 100%), url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/sandra-mosconi-t1Eap41N4ms-unsplash-9ql2WzWKqN5iVlglG8X0Sfm9Tt514H.jpg') center / cover no-repeat;
+    color: var(--ivory);
+    padding: 88px 0 96px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 56px;
+    align-items: center;
+  }
+  @media (max-width: 900px) {
+    .hero-grid { grid-template-columns: 1fr; }
+  }
+  .hero-eyebrow {
+    font-size: 15px;
+    color: var(--brass-light);
+    font-weight: 500;
+    margin-bottom: 18px;
+  }
+  .hero h1 {
+    font-size: clamp(38px, 5vw, 58px);
+    color: var(--ivory);
+    max-width: 15ch;
+  }
+  .hero h1 .accent { color: var(--brass-light); }
+  .hero-sub {
+    margin-top: 22px;
+    font-size: 18px;
+    color: rgba(250,246,236,0.78);
+    max-width: 46ch;
+    line-height: 1.65;
+  }
+  .hero-ctas {
+    display: flex;
+    gap: 14px;
+    margin-top: 34px;
+    flex-wrap: wrap;
+  }
+  .hero-note {
+    margin-top: 22px;
+    font-size: 14px;
+    color: rgba(250,246,236,0.5);
+  }
+
+  /* Notation comparison graphic */
+  .notation-card {
+    background: var(--ivory);
+    border-radius: 4px;
+    padding: 30px 26px 26px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.35);
+  }
+  .notation-card .label {
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .notation-card svg { width: 100%; height: auto; }
+  .notation-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 18px 0;
+    color: var(--ink-soft);
+    font-size: 12.5px;
+  }
+  .notation-divider::before, .notation-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--line);
+  }
+
+  /* ---------- Ticker ---------- */
+  .ticker {
+    background: var(--oxblood);
+    overflow: hidden;
+    padding: 15px 0;
+    border-top: 1px solid rgba(250,246,236,0.15);
+    border-bottom: 1px solid rgba(250,246,236,0.15);
+  }
+  .ticker-track {
+    display: flex;
+    align-items: center;
+    gap: 44px;
+    width: max-content;
+    animation: ticker-scroll 28s linear infinite;
+    font-family: 'Fraunces', serif;
+    font-size: 15px;
+    color: var(--ivory);
+    white-space: nowrap;
+  }
+  .ticker-track b { color: var(--brass-light); font-size: 12px; }
+  @keyframes ticker-scroll {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ticker-track { animation: none; }
+  }
+
+  /* ---------- Section scaffolding ---------- */
+  section { padding: 96px 0; }
+  .section-ivory-2 { background: var(--ivory-2); }
+  .section-ink { background: var(--ink); color: var(--ivory); }
+  .kicker {
+    font-size: 15px;
+    color: var(--oxblood);
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+  .section-ink .kicker { color: var(--brass-light); }
+  h2 { font-size: clamp(28px, 3.4vw, 38px); }
+  .section-lede {
+    font-size: 18px;
+    color: var(--ink-soft);
+    max-width: 56ch;
+    margin-top: 18px;
+    line-height: 1.65;
+  }
+  .section-ink .section-lede { color: rgba(250,246,236,0.72); }
+
+  /* ---------- About ---------- */
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 64px;
+    align-items: start;
+    margin-top: 48px;
+  }
+  @media (max-width: 860px) {
+    .about-grid { grid-template-columns: 1fr; gap: 40px; }
+  }
+  .about-copy p { margin-bottom: 18px; font-size: 16.5px; line-height: 1.75; color: #333B4F; }
+  .about-copy p:last-child { margin-bottom: 0; }
+  .modulator {
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 28px;
+    background: var(--ivory);
+  }
+  .modulator-title { font-size: 13px; font-weight: 600; color: var(--ink-soft); margin-bottom: 16px; }
+  .modulator-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--line);
+    font-size: 15px;
+  }
+  .modulator-row:last-child { border-bottom: none; }
+  .modulator-syl { font-family: 'Fraunces', serif; font-weight: 600; font-size: 17px; color: var(--oxblood); margin-right: 16px; flex-shrink: 0; }
+  .modulator-def { color: var(--ink-soft); text-align: right; }
+
+  /* ---------- Feature triptych (bold, colored) ---------- */
+  .feature-triptych {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin: 44px 0 8px;
+  }
+  @media (max-width: 780px) {
+    .feature-triptych { grid-template-columns: 1fr; }
+  }
+  .triptych-card {
+    min-height: 260px;
+    border-radius: 4px;
+    padding: 26px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .triptych-ink { background: var(--ink); color: var(--ivory); }
+  .triptych-brass { background: var(--brass); color: var(--ink); }
+  .triptych-oxblood { background: var(--oxblood); color: var(--ivory); }
+  .triptych-num { font-size: 12px; opacity: 0.65; font-weight: 600; }
+  .triptych-glyph {
+    font-family: 'Fraunces', serif;
+    font-size: 26px;
+    font-weight: 600;
+    letter-spacing: 3px;
+  }
+  .triptych-card h3 {
+    font-size: 25px;
+    line-height: 1.08;
+  }
+  .triptych-card p {
+    font-size: 13.5px;
+    line-height: 1.6;
+    opacity: 0.82;
+    max-width: 26ch;
+  }
+
+  /* ---------- Feature detail rows ---------- */
+  .feature-row {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 40px;
+    padding: 38px 0;
+    border-top: 1px solid var(--line);
+  }
+  .feature-row:last-child { border-bottom: 1px solid var(--line); }
+  @media (max-width: 720px) {
+    .feature-row { grid-template-columns: 1fr; gap: 12px; }
+  }
+  .feature-num {
+    font-family: 'Fraunces', serif;
+    font-size: 15px;
+    color: var(--brass);
+    font-weight: 600;
+  }
+  .feature-name {
+    font-family: 'Fraunces', serif;
+    font-size: 23px;
+    font-weight: 600;
+    margin-top: 6px;
+  }
+  .feature-desc {
+    font-size: 16px;
+    color: var(--ink-soft);
+    max-width: 60ch;
+    line-height: 1.7;
+  }
+
+  /* ---------- CTA band ---------- */
+  .cta-band {
+    background: var(--oxblood);
+    color: var(--ivory);
+    padding: 72px 0;
+    text-align: center;
+  }
+  .cta-band h2 { color: var(--ivory); max-width: 22ch; margin: 0 auto; }
+  .cta-band .section-lede { color: rgba(250,246,236,0.82); margin-left: auto; margin-right: auto; }
+  .cta-band .hero-ctas { justify-content: center; margin-top: 30px; }
+  .cta-band .btn-outline-light:hover { color: var(--brass-light); border-color: var(--brass-light); }
+
+  /* ---------- Contact ---------- */
+  .contact-grid {
+    display: grid;
+    grid-template-columns: 0.9fr 1.1fr;
+    gap: 56px;
+    margin-top: 48px;
+  }
+  @media (max-width: 860px) {
+    .contact-grid { grid-template-columns: 1fr; gap: 36px; }
+  }
+  .contact-info-item { margin-bottom: 26px; }
+  .contact-info-label { font-size: 13px; color: var(--ink-soft); font-weight: 600; margin-bottom: 4px; }
+  .contact-info-value { font-size: 17px; }
+  .contact-info-value a:hover { color: var(--oxblood); }
+
+  form { display: flex; flex-direction: column; gap: 18px; }
+  .field label {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink-soft);
+    margin-bottom: 7px;
+  }
+  .field input, .field textarea {
+    width: 100%;
+    font-family: inherit;
+    font-size: 15.5px;
+    padding: 12px 14px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    background: var(--ivory);
+    color: var(--ink);
+  }
+  .field input:focus, .field textarea:focus {
+    outline: none;
+    border-color: var(--brass);
+    box-shadow: 0 0 0 3px rgba(176,141,87,0.18);
+  }
+  .field textarea { min-height: 120px; resize: vertical; }
+  form .btn { align-self: flex-start; }
+  .form-note { font-size: 13.5px; color: var(--ink-soft); margin-top: -4px; }
+
+  /* ---------- Footer ---------- */
+  footer {
+    background: var(--ink);
+    color: rgba(250,246,236,0.7);
+    padding: 56px 0 30px;
+  }
+  .footer-grid {
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr;
+    gap: 40px;
+  }
+  @media (max-width: 700px) {
+    .footer-grid { grid-template-columns: 1fr; gap: 32px; }
+  }
+  .footer-wordmark { font-family: 'Fraunces', serif; font-size: 20px; color: var(--ivory); font-weight: 600; display: flex; align-items: center; gap: 10px; }
+  .footer-tag { margin-top: 12px; font-size: 14.5px; max-width: 32ch; line-height: 1.6; }
+  .footer-col-title { font-size: 13px; font-weight: 600; color: var(--ivory); margin-bottom: 14px; }
+  .footer-col a { display: block; font-size: 14.5px; margin-bottom: 10px; }
+  .footer-col a:hover { color: var(--brass-light); }
+  .footer-bottom {
+    margin-top: 48px;
+    padding-top: 22px;
+    border-top: 1px solid var(--line-dark);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 13.5px;
+  }
+
+  /* focus visibility */
+  /* ---------- Scroll reveal ---------- */
+  /* No explicit duration → in browsers that don't support
+     animation-timeline: view() (Firefox, Safari as of writing), this
+     degrades to a 0s animation that lands instantly on the "to" state —
+     i.e. content just shows normally, no animation, never stuck
+     invisible. Chrome/Edge get the real scroll-linked reveal. */
+  .reveal {
+    animation: reveal-up linear both;
+    animation-timeline: view();
+    animation-range: entry 5% cover 30%;
+  }
+  @keyframes reveal-up {
+    from { opacity: 0.3; transform: translateY(28px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible {
+    outline: 2px solid var(--brass);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <nav>
+      <a href="#top" class="wordmark"><span class="brand-mark">fs</span><span>Faith<em>Score</em></span></a>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
+      <div class="nav-links" id="navLinks">
+        <a href="#about">About</a>
+        <a href="#features">Features</a>
+        <a href="#contact">Contact</a>
+        <a class="btn btn-brass" href="https://faithscore-6c35.vercel.app/?signup=1" data-cta="nav">Sign up</a>
+      </div>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" style="padding-top:88px;">
+    <div class="wrap hero-grid">
+      <div>
+        <div class="hero-eyebrow">A composer that speaks two notations</div>
+        <h1>Write music that your <span class="accent">whole choir</span> can read.</h1>
+        <p class="hero-sub">FaithScore composes in standard staff notation and tonic sol-fa side by side — so a piece written for a director trained on the stave and a choir trained on d, r, m, f, s, l, t never needs translating by hand again.</p>
+        <div class="hero-ctas">
+          <a class="btn btn-brass" href="https://faithscore-6c35.vercel.app/?signup=1" data-cta="hero-primary">Start composing free</a>
+          <a class="btn btn-outline-light" href="#about">See how it works</a>
+        </div>
+        <p class="hero-note">No installation. Works in your browser. Free to start.</p>
+      </div>
+
+      <div class="notation-card" aria-hidden="false">
+        <div class="label">STAFF NOTATION</div>
+        <svg viewBox="0 0 460 110" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A short musical phrase in staff notation">
+          <g stroke="#1D2433" stroke-width="1">
+            <line x1="10" y1="20" x2="450" y2="20"/>
+            <line x1="10" y1="35" x2="450" y2="35"/>
+            <line x1="10" y1="50" x2="450" y2="50"/>
+            <line x1="10" y1="65" x2="450" y2="65"/>
+            <line x1="10" y1="80" x2="450" y2="80"/>
+          </g>
+          <text x="14" y="66" font-family="Georgia, serif" font-size="52" fill="#1D2433">&#119070;</text>
+          <g fill="#1D2433">
+            <ellipse cx="120" cy="50" rx="7" ry="5.2" transform="rotate(-18 120 50)"/>
+            <line x1="126.5" y1="48" x2="126.5" y2="16" stroke="#1D2433" stroke-width="1.4"/>
+            <ellipse cx="185" cy="42" rx="7" ry="5.2" transform="rotate(-18 185 42)"/>
+            <line x1="191.5" y1="40" x2="191.5" y2="10" stroke="#1D2433" stroke-width="1.4"/>
+            <ellipse cx="250" cy="35" rx="7" ry="5.2" transform="rotate(-18 250 35)"/>
+            <line x1="256.5" y1="33" x2="256.5" y2="4" stroke="#1D2433" stroke-width="1.4"/>
+            <ellipse cx="315" cy="27" rx="7" ry="5.2" transform="rotate(-18 315 27)"/>
+            <line x1="321.5" y1="25" x2="321.5" y2="-4" stroke="#1D2433" stroke-width="1.4"/>
+            <ellipse cx="390" cy="50" rx="7.5" ry="5.6" transform="rotate(-18 390 50)"/>
+            <line x1="397" y1="48" x2="397" y2="14" stroke="#1D2433" stroke-width="1.6"/>
+          </g>
+        </svg>
+
+        <div class="notation-divider">the same phrase, in sol-fa</div>
+
+        <div class="label">TONIC SOL-FA</div>
+        <svg viewBox="0 0 460 60" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The same phrase written in tonic sol-fa syllables">
+          <g font-family="Fraunces, serif" font-size="30" font-weight="600" fill="#6B2A2A">
+            <text x="95" y="38">d</text>
+            <text x="170" y="38">r</text>
+            <text x="240" y="38">m</text>
+            <text x="305" y="38">f</text>
+            <text x="375" y="38">s</text>
+          </g>
+          <g stroke="#B08D57" stroke-width="1.4">
+            <line x1="10" y1="46" x2="450" y2="46"/>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TICKER ============ -->
+  <section class="ticker" aria-label="FaithScore, in brief">
+    <div class="ticker-track" aria-hidden="true">
+      <span>Write in staff or sol-fa</span><b>&#10022;</b>
+      <span>Hear every voice before Sunday</span><b>&#10022;</b>
+      <span>Print pages ready for the folder</span><b>&#10022;</b>
+      <span>Publish straight to your library</span><b>&#10022;</b>
+      <span>Write in staff or sol-fa</span><b>&#10022;</b>
+      <span>Hear every voice before Sunday</span><b>&#10022;</b>
+      <span>Print pages ready for the folder</span><b>&#10022;</b>
+      <span>Publish straight to your library</span><b>&#10022;</b>
+    </div>
+  </section>
+
+  <!-- ============ ABOUT ============ -->
+  <section id="about" class="reveal">
+    <div class="wrap">
+      <div class="kicker">Why FaithScore exists</div>
+      <h2>Tonic sol-fa never left. Most notation software just stopped supporting it.</h2>
+
+      <div class="about-grid">
+        <div class="about-copy">
+          <p>Across choirs in African and Commonwealth churches, tonic sol-fa is still how most singers read music — a system of movable syllables, not lines and dots. It's how generations learned to sing in parts, and it's still printed in hymn books every week.</p>
+          <p>Mainstream notation software was built around the stave. If your choir reads sol-fa, you're on your own — copying a piece out by hand, syllable by syllable, every time something needs to change.</p>
+          <p>FaithScore keeps both notations as first-class citizens of the same piece. Write in whichever one you think in, convert to the other when you need to, and keep every lyric, tie, slur, and chord intact along the way.</p>
+        </div>
+
+        <div class="modulator">
+          <div class="modulator-title">THE SEVEN SYLLABLES</div>
+          <div class="modulator-row"><span class="modulator-syl">doh</span><span class="modulator-def">where the ear comes to rest</span></div>
+          <div class="modulator-row"><span class="modulator-syl">ray</span><span class="modulator-def">a step up, still climbing</span></div>
+          <div class="modulator-row"><span class="modulator-syl">me</span><span class="modulator-def">bright, wide open</span></div>
+          <div class="modulator-row"><span class="modulator-syl">fah</span><span class="modulator-def">restless, wants doh</span></div>
+          <div class="modulator-row"><span class="modulator-syl">soh</span><span class="modulator-def">strong, unshaken</span></div>
+          <div class="modulator-row"><span class="modulator-syl">lah</span><span class="modulator-def">wistful, in between</span></div>
+          <div class="modulator-row"><span class="modulator-syl">te</span><span class="modulator-def">leaning hard toward home</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FEATURES ============ -->
+  <section id="features" class="section-ivory-2 reveal">
+    <div class="wrap">
+      <div class="kicker">What's in the score</div>
+      <h2>Everything a choir score needs, in both notations.</h2>
+      <p class="section-lede">Built around the parts of writing choir music that mattered most in testing with real anthems and hymns — not a generic notation editor with sol-fa bolted on.</p>
+
+      <div class="feature-triptych">
+        <div class="triptych-card triptych-ink">
+          <div><span class="triptych-num">01</span></div>
+          <div>
+            <div class="triptych-glyph">d&nbsp;&nbsp;r&nbsp;&nbsp;m</div>
+            <h3 style="margin-top:14px;">Write in either notation</h3>
+          </div>
+        </div>
+        <div class="triptych-card triptych-brass">
+          <div><span class="triptych-num">02</span></div>
+          <div>
+            <div class="triptych-glyph">&#9834;&nbsp;&#9835;&nbsp;&#9834;</div>
+            <h3 style="margin-top:14px;">Hear every part</h3>
+          </div>
+        </div>
+        <div class="triptych-card triptych-oxblood">
+          <div><span class="triptych-num">03</span></div>
+          <div>
+            <div class="triptych-glyph">&#9633;&nbsp;&#9633;&nbsp;&#9633;</div>
+            <h3 style="margin-top:14px;">Print-ready pages</h3>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 20px;">
+        <div class="feature-row">
+          <div><span class="feature-num">01</span><div class="feature-name">Write in either notation</div></div>
+          <div class="feature-desc">Compose directly in staff notation or tonic sol-fa. Convert a finished piece between the two at any point — chords, tied notes, slurs, lyrics, and key changes carry across correctly, not just the bare pitches.</div>
+        </div>
+        <div class="feature-row">
+          <div><span class="feature-num">02</span><div class="feature-name">Hear every part</div></div>
+          <div class="feature-desc">Play back SATB or solo arrangements with a per-voice mixer, humanized timing, and real dynamics — so you can check a harmony or teach a part before rehearsal, not just look at it on the page.</div>
+        </div>
+        <div class="feature-row">
+          <div><span class="feature-num">03</span><div class="feature-name">Print-ready pages</div></div>
+          <div class="feature-desc">Export clean, properly paginated PDFs sized for the page you're actually printing on, with copyright and CCLI details included — ready to photocopy for Sunday, not just a screenshot of the editor.</div>
+        </div>
+        <div class="feature-row">
+          <div><span class="feature-num">04</span><div class="feature-name">Publish to your library</div></div>
+          <div class="feature-desc">Send a finished score straight to FaithLibrary, where your choir can find and download it — no separate upload step, no emailing PDFs around.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CTA BAND ============ -->
+  <section class="cta-band reveal">
+    <div class="wrap">
+      <h2>Bring your next anthem into both notations.</h2>
+      <p class="section-lede">Free to start. No card required.</p>
+      <div class="hero-ctas">
+        <a class="btn btn-brass" href="https://faithscore-6c35.vercel.app/?signup=1" data-cta="band">Sign up and start writing</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CONTACT ============ -->
+  <section id="contact" class="reveal">
+    <div class="wrap">
+      <div class="kicker">Get in touch</div>
+      <h2>Questions, requests, or a choir to tell us about?</h2>
+
+      <div class="contact-grid">
+        <div>
+          <div class="contact-info-item">
+            <div class="contact-info-label">EMAIL</div>
+            <div class="contact-info-value"><a href="mailto:hello@faithscore.io">hello@faithscore.io</a></div>
+          </div>
+          <div class="contact-info-item">
+            <div class="contact-info-label">FOR CHOIRS AND DIRECTORS</div>
+            <div class="contact-info-value">Tell us what your choir needs — new features are shaped by real rehearsals, not a roadmap written in isolation.</div>
+          </div>
+        </div>
+
+        <form id="contactForm">
+          <div class="field">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" required>
+          </div>
+          <div class="field">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required>
+          </div>
+          <div class="field">
+            <label for="message">Message</label>
+            <textarea id="message" name="message" required></textarea>
+          </div>
+          <p class="form-note">This opens your email client with the message pre-filled — FaithScore doesn't have a contact-form backend yet.</p>
+          <button type="submit" class="btn btn-outline-dark">Send message</button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-wordmark"><span class="brand-mark">fs</span>FaithScore</div>
+        <p class="footer-tag">Composition software for choirs who read in staff notation, tonic sol-fa, or both.</p>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">PRODUCT</div>
+        <a href="#about">About</a>
+        <a href="#features">Features</a>
+        <a href="https://faithscore-6c35.vercel.app/?signup=1">Sign up</a>
+        <a href="https://faithscore-6c35.vercel.app/">Log in</a>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">MORE</div>
+        <a href="#contact">Contact</a>
+        <a href="#top">FaithLibrary</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; <span id="year"></span> FaithScore. Built for the choir loft.</span>
+      <span>For every voice that learns by syllable, not just by stave.</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  const header = document.querySelector('header');
+  const updateHeader = () => header.classList.toggle('is-scrolled', window.scrollY > 24);
+  updateHeader();
+  window.addEventListener('scroll', updateHeader, { passive: true });
+  
+  const navToggle = document.getElementById('navToggle');
+  const navLinks = document.getElementById('navLinks');
+  navToggle.addEventListener('click', () => {
+    const isOpen = navLinks.classList.toggle('open');
+    navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  });
+  navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+    navLinks.classList.remove('open');
+    navToggle.setAttribute('aria-expanded', 'false');
+  }));
+
+  document.getElementById('contactForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    const name = encodeURIComponent(document.getElementById('name').value);
+    const email = document.getElementById('email').value;
+    const message = encodeURIComponent(document.getElementById('message').value);
+    const subject = encodeURIComponent('Message from ' + document.getElementById('name').value + ' via FaithScore site');
+    const body = encodeURIComponent(document.getElementById('message').value + '\n\n— ' + document.getElementById('name').value + ' (' + email + ')');
+    window.location.href = `mailto:hello@faithscore.io?subject=${subject}&body=${body}`;
+  });
+</script>
+
+</body>
+</html>
