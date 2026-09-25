@@ -275,7 +275,10 @@
   /* ---------- Section scaffolding ---------- */
   section { padding: 96px 0; }
   .section-ivory-2 { background: var(--ivory-2); }
-  .section-ink { background: var(--ink); color: var(--ivory); }
+  .section-ink {
+    background: linear-gradient(rgba(18, 18, 25, 0.72), rgba(18, 18, 25, 0.72)), url('/faithlibrary-background-img.jpg') center / cover no-repeat;
+    color: var(--ivory);
+  }
   .kicker {
     font-size: 15px;
     color: var(--oxblood);
@@ -394,6 +397,55 @@
     color: var(--ink-soft);
     max-width: 60ch;
     line-height: 1.7;
+  }
+
+  /* ---------- Library cross-promo ---------- */
+  .library-grid {
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+    gap: 64px;
+    align-items: center;
+    margin-top: 8px;
+  }
+  @media (max-width: 900px) {
+    .library-grid { grid-template-columns: 1fr; gap: 40px; }
+  }
+  .library-card {
+    background: rgba(250,246,236,0.04);
+    border: 1px solid var(--line-dark);
+    border-radius: 4px;
+    padding: 30px 28px;
+  }
+  .library-card-title {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--brass-light);
+    margin-bottom: 18px;
+  }
+  .library-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+  .library-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 15.5px;
+    line-height: 1.6;
+    color: rgba(250,246,236,0.85);
+  }
+  .library-list-dot {
+    flex-shrink: 0;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--brass);
+    margin-top: 8px;
   }
 
   /* ---------- CTA band ---------- */
@@ -519,6 +571,7 @@
       <div class="nav-links" id="navLinks">
         <a href="#about">About</a>
         <a href="#features">Features</a>
+        <a href="#library">Library</a>
         <a href="#contact">Contact</a>
         <a class="btn btn-brass" href="https://faithscore-6c35.vercel.app/?signup=1" data-cta="nav">Sign up</a>
       </div>
@@ -679,6 +732,38 @@
     </div>
   </section>
 
+  <!-- ============ LIBRARY ============ -->
+  <section id="library" class="section-ink reveal">
+    <div class="wrap">
+      <div class="kicker">Where your scores live</div>
+      <h2>Finish the score. Then let your choir actually find it.</h2>
+
+      <div class="library-grid">
+        <div>
+          <p class="section-lede">FaithScore already has a "Publish to FaithLibrary" button built into the editor — send a finished piece straight from your workspace into FaithLibrary, no separate upload step, no emailing PDFs around.</p>
+          <p style="margin-top:20px; font-size:16px; line-height:1.75; color:rgba(250,246,236,0.75); max-width:52ch;">
+            FaithLibrary is a free digital library for choral music, hymns, and sacred scores — a searchable home for the pieces you write in FaithScore, and for what other choirs are sharing too.
+          </p>
+          <div class="hero-ctas" style="margin-top:30px;">
+            <a class="btn btn-brass" href="https://faith-library.vercel.app" target="_blank" rel="noopener noreferrer" data-cta="library-primary">Browse FaithLibrary</a>
+            <a class="btn btn-outline-light" href="#features">How publishing works</a>
+          </div>
+        </div>
+
+        <div class="library-card">
+          <div class="library-card-title">INSIDE FAITHLIBRARY</div>
+          <ul class="library-list">
+            <li><span class="library-list-dot" aria-hidden="true"></span>Free to browse and download — searchable by title, composer, category, season, or voicing</li>
+            <li><span class="library-list-dot" aria-hidden="true"></span>Upload your own scores and organize favorites into collections</li>
+            <li><span class="library-list-dot" aria-hidden="true"></span>Post a score request and let the community help track it down</li>
+            <li><span class="library-list-dot" aria-hidden="true"></span>Optional audio recordings attached alongside the sheet music</li>
+            <li><span class="library-list-dot" aria-hidden="true"></span>Lyrics extracted automatically from uploaded scores</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- ============ CTA BAND ============ -->
   <section class="cta-band reveal">
     <div class="wrap">
@@ -747,7 +832,7 @@
       <div class="footer-col">
         <div class="footer-col-title">MORE</div>
         <a href="#contact">Contact</a>
-        <a href="#top">FaithLibrary</a>
+        <a href="https://faith-library.vercel.app" target="_blank" rel="noopener noreferrer">FaithLibrary</a>
       </div>
     </div>
     <div class="footer-bottom">
